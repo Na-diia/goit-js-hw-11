@@ -17,16 +17,12 @@ let page = 1;
 let query = '';
 const limit = 40;
 
-// onScroll();
-// onToTopBtn();
-
 refs.searchForm.addEventListener('submit', onSearchForm);
 refs.btnLoad.addEventListener('click', onLoadBtn);
 refs.btnLoad.classList.add("is-hidden");
 
-function onSearchForm (event) {
+async function onSearchForm (event) {
   event.preventDefault();
- //window.scrollTo({ top: 0 });
 
  query = event.currentTarget.searchQuery.value.trim();
 
@@ -38,46 +34,54 @@ function onSearchForm (event) {
  if(query === '') {
     emptyString();
     return;
- }  fetchImage(query, page, limit)
-   .then(({ data }) => {
-    if(data.totalHits === 0) {
+ };
+
+const response = await fetchImage(query, page, limit);
+
+  if (response.totalHits > limit) {
+    refs.btnLoad.classList.remove('is-hidden');
+   } else {
+    refs.btnLoad.classList.add('is-hidden');
+  }
+
+  try {
+  if(response.totalHits === 0) {
         alertNoImages();
-    } else if (data.hits > limit) {
-        refs.btnLoad.classList.remove('is-hidden');
+        refs.searchForm.reset();
     } else {
-        refs.gallery.insertAdjacentHTML('beforeend', renderGallery(data.hits));
+        refs.gallery.insertAdjacentHTML('beforeend', renderGallery(response.hits));
         simpleLightBox = new SimpleLightbox('.gallery a').refresh();
-        greenAnswer(data.totalHits);
-        refs.btnLoad.classList.remove('is-hidden');
+        greenAnswer(response.totalHits);
+        refs.searchForm.reset();
       }
-      })
-   .catch(error => console.log(error))
-   .finally(() => {
-     refs.searchForm.reset();
-   });
+    } 
+   catch(error) { console.log(error.message) };
 };
 
-function onLoadBtn(event) {
+async function onLoadBtn(event) {
   event.preventDefault();
 
   page += 1;
-  simpleLightBox.destroy();
 
   refs.btnLoad.classList.remove('is-hidden');
 
-  fetchImage(query, page, limit)
-   .then(({ data }) => {
-    refs.gallery.insertAdjacentHTML('beforeend', renderGallery(data.hits));
+  const response = await fetchImage(query, page, limit);
+   try {
+    refs.gallery.insertAdjacentHTML('beforeend', renderGallery(response.hits));
     simpleLightBox = new SimpleLightbox('.gallery a').refresh();
 
-    const totalNumberImages = Math.ceil(data.hits / limit);
+    const totalNumberImages = response.totalHits / limit;
+    onScroll();
 
     if(page > totalNumberImages) { 
       toEndGallery();
 
       refs.btnLoad.classList.add('is-hidden');
     };
-  }).catch(error => console.log(error));
+  }
+  catch (error) { 
+    console.log(error.message); 
+  }
 };
 
 function renderGallery(images) {
