@@ -1,6 +1,6 @@
 import "./css/main.css";
 import { fetchImage } from "./fetch-image.js";
-import { onScroll, onToTopBtn } from "./scroll.js";
+import { onScroll } from "./scroll.js";
 import Notiflix from 'notiflix';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
@@ -36,7 +36,7 @@ async function onSearchForm (event) {
     return;
  };
 
-const response = await fetchImage(query, page, limit);
+  const response = await fetchImage(query, page, limit);
 
   if (response.totalHits > limit) {
     refs.btnLoad.classList.remove('is-hidden');
